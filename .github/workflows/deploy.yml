@@ -1,0 +1,24 @@
+name: Deploy to Server
+
+on:
+  push:
+    branches:
+      - main # Jab bhi aap 'main' branch par push karenge
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Deploy via SSH
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.SERVER_IP }} # Apne server ka IP daalo
+        username: ${{ secrets.SERVER_USER }} # Jaise: root
+        key: ${{ secrets.SSH_PRIVATE_KEY }} # Apna SSH key daalo
+        script: |
+          # Server par jaakar yeh commands run honge
+          cd /root/your-project-folder # Yahan apna project folder ka path daalo
+          git pull origin main
+          docker-compose pull
+          docker-compose up -d --build
