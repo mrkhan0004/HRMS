@@ -6,11 +6,12 @@ services:
     image: mariadb:10.6
     container_name: frappe-mariadb
     restart: always
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --skip-character-set-client-handshake
     environment:
-      - MYSQL_ROOT_PASSWORD=your_super_secret_password # Yahan apna password daalo
-      - MYSQL_DATABASE=frappe
-      - MYSQL_USER=frappe
-      - MYSQL_PASSWORD=frappe_db_password # Yahan bhi apna password daalo
+      - MYSQL_ROOT_PASSWORD=admin # Root password for MariaDB
     volumes:
       - mariadb-data:/var/lib/mysql
     networks:
@@ -38,27 +39,20 @@ services:
     networks:
       - frappe-network
 
-  # 3. Frappe App Setup
+  # 3. Frappe App Setup (Bench Development)
   frappe:
-    image: frappe/frappe-worker:latest
+    image: frappe/bench:latest
     container_name: frappe-app
     restart: always
+
+    command: bash /workspace/docker/init.sh
     environment:
-      - FRAPPE_SITE_NAME=your-site.com # Apna domain ya IP yahan daalo
-      - DB_HOST=mariadb
-      - DB_PORT=3306
-      - DB_NAME=frappe
-      - DB_USER=frappe
-      - DB_PASSWORD=frappe_db_password # Yeh upar wali password same honi chahiye
-      - REDIS_CACHE_HOST=redis-cache
-      - REDIS_QUEUE_HOST=redis-queue
-      - REDIS_SOCKETIO_HOST=redis-socketio
+      - SHELL=/bin/bash
     ports:
       - "8000:8000" # Frappe Web port
       - "9000:9000" # Socketio port
     volumes:
-      - frappe-assets:/home/frappe/frappe-bench/sites/assets
-      - frappe-logs:/home/frappe/frappe-bench/logs
+      - .:/workspace
     depends_on:
       - mariadb
       - redis-cache
@@ -69,9 +63,8 @@ services:
 
 volumes:
   mariadb-data:
-  frappe-assets:
-  frappe-logs:
 
 networks:
   frappe-network:
     driver: bridge
+
